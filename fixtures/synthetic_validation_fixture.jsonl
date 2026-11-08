@@ -1,0 +1,3 @@
+{"id":"syn_val_A","split":"validation","task_type":"synthetic","label":"harmful","steps":["The fictional test mentions synthetic-risk-a.","The next fictional step has synthetic-risk-b."],"harmful_index":1}
+{"id":"syn_val_B","split":"validation","task_type":"synthetic","label":"benign","steps":["We discuss synthetic-risk-a as one isolated term.","The next subject is origami."],"harmful_index":null}
+{"id":"syn_val_C","split":"validation","task_type":"synthetic","label":"benign","steps":["Plain paper cranes.","Quiet rain sounds."],"harmful_index":null}

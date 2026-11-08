@@ -1,0 +1,3 @@
+{"id":"syn_test_A","split":"test","task_type":"synthetic","label":"harmful","steps":["A fabricated scenario carries synthetic-risk-a.","It also carries synthetic-risk-b."],"harmful_index":1}
+{"id":"syn_test_B","split":"test","task_type":"synthetic","label":"benign","steps":["One neutral phrase synthetic-risk-a.","A paper-airplane game."],"harmful_index":null}
+{"id":"syn_test_C","split":"test","task_type":"synthetic","label":"benign","steps":["Hello there.","Thank you."],"harmful_index":null}

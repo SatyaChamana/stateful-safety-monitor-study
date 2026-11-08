@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+!*.example
+models/
+data/
+*.safetensors
+*.pt
+*.pth
+*.bin
+results/*
+!results/.gitkeep
+!results/SMOKE_TEST_RESULTS.json
+*.log
+*.egg-info/
+
+# Upstream reference code + bundled benchmark data: local only, never commit
+third_party/

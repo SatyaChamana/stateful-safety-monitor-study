@@ -1,0 +1,73 @@
+{
+ "status": "PREDECLARED_BEFORE_TEST_EVALUATION",
+ "frozen_at_utc": "2026-11-02T23:59:40+00:00",
+ "dataset_revision": "25e1d5910c2cccbdcae11799193595cea999bda8",
+ "files": [
+  {
+   "file": "combined_train.csv",
+   "split": "train",
+   "sha256": "ba98d5dc4b802e4ccaa3ebcfe232b2d3055a9f65d1d7aabd30e631469fd81b62"
+  },
+  {
+   "file": "combined_val.csv",
+   "split": "validation",
+   "sha256": "d94d376e28762c374bd128dfbbe0b7310755a786e5e9661ab23d66760f60bb6d"
+  },
+  {
+   "file": "combined_test.csv",
+   "split": "test",
+   "sha256": "ea85ac20c15b86499c1af450aa2cbc5974964967109b5b74224d6f20e6fd20f2"
+  }
+ ],
+ "primary_analysis": "keep all rows (paper replication)",
+ "sensitivity_analysis": "drop the union of all rule IDs; labels never changed",
+ "rules": {
+  "R1_identical_steps_conflicting_labels": "Exact step sequence occurs with both labels anywhere in the dataset; exclude all members.",
+  "R2_goal_shared_across_splits": "Exact original_task occurs in more than one split; exclude every validation/test member.",
+  "R3_goal_conflicting_labels": "Exact original_task occurs with both labels anywhere; exclude all members."
+ },
+ "ids_by_rule": {
+  "R1_identical_steps_conflicting_labels": [
+   "agent/benign_0011",
+   "agent/harmful_0011"
+  ],
+  "R2_goal_shared_across_splits": [
+   "QA/benign_0531",
+   "QA/benign_0543",
+   "QA/benign_0849",
+   "QA/harmful_0138",
+   "QA/harmful_0226",
+   "QA/harmful_0447",
+   "QA/harmful_0598",
+   "QA/harmful_0693"
+  ],
+  "R3_goal_conflicting_labels": [
+   "agent/benign_0011",
+   "agent/harmful_0011"
+  ]
+ },
+ "union_ids": [
+  "QA/benign_0531",
+  "QA/benign_0543",
+  "QA/benign_0849",
+  "QA/harmful_0138",
+  "QA/harmful_0226",
+  "QA/harmful_0447",
+  "QA/harmful_0598",
+  "QA/harmful_0693",
+  "agent/benign_0011",
+  "agent/harmful_0011"
+ ],
+ "union_in_paper_subset": {
+  "validation": [
+   "QA/harmful_0226",
+   "QA/harmful_0447"
+  ],
+  "test": [
+   "QA/benign_0531",
+   "QA/harmful_0693",
+   "agent/benign_0011",
+   "agent/harmful_0011"
+  ]
+ }
+}

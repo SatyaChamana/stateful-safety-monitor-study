@@ -1,0 +1,32 @@
+{
+  "status": "SMOKE_TEST_ONLY",
+  "dataset_path_redacted": "synthetic_fixture.jsonl",
+  "backend": "MOCK_SOFTWARE_TEST_ONLY",
+  "history_mode": "full",
+  "k": 3,
+  "metrics": {
+    "n_benign": 2,
+    "n_harmful": 2,
+    "threshold": 0.9,
+    "sequence_fpr": 0.0,
+    "sequence_detection_recall": 1.0,
+    "timely_recall": 1.0,
+    "timely_recall_denominator": 2,
+    "harmful_without_harm_boundary": 0,
+    "definition_warning": "Timely recall uses provided boundary and requires verified index-base/label semantics."
+  },
+  "usage": {
+    "decisions": 8,
+    "history_items": 4,
+    "input_tokens_total": null,
+    "output_tokens_total": null,
+    "token_count_available": false,
+    "elapsed_seconds": 1.4512000234390143e-05,
+    "mean_history_items": 0.5
+  },
+  "warnings": [
+    "This command does not reproduce the paper's published evaluator.",
+    "No score thresholds were calibrated unless done separately on validation.",
+    "Do not interpret mock-label performance as research evidence."
+  ]
+}

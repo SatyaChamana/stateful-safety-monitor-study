@@ -1,0 +1,101 @@
+{
+ "status": "PREREGISTERED_BEFORE_ANY_PHASE3_RUN",
+ "written_at_utc": "2026-11-03T03:43:03+00:00",
+ "judge": {
+  "paper_prompt": "BINARY_INTENTION_EVAL_W_8_AGENT_ICL",
+  "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+  "model_revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+  "dtype": "bfloat16",
+  "hardware": "clipper NVIDIA H100 NVL",
+  "selected_on": "VALIDATION paper-protocol F1 (Agent-ICL 0.922, probability 0.862, binary 0.788); user decision 2026-11-02"
+ },
+ "dense_encoder": {
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "license": "apache-2.0"
+ },
+ "data": {
+  "ids": "configs/paper_eval_split.json",
+  "validation_n": 264,
+  "test_n": 528,
+  "sensitivity_exclusions": "configs/sensitivity_exclusions.json"
+ },
+ "test_reuse_disclosure": "The 528 paper test sequences were each scored once for three published prompts in the Phase 2 replication (no tuning on them). Phase 3 reuses them for new history conditions; any claim must state this.",
+ "protocol": {
+  "first_turn": "not scored in any condition (paper protocol)",
+  "only_changed_input": "which earlier steps the judge sees; template, parsing, decoding identical",
+  "presentation": "selected earlier steps in chronological order, then the current request",
+  "threshold": "per condition, most sensitive threshold with validation sequence FPR <= budget (>= firing rule)",
+  "fpr_budget": 0.05
+ },
+ "pilot_conditions": [
+  "current",
+  "full",
+  "recent_k3",
+  "recent_k5",
+  "bm25_k3",
+  "bm25_k5",
+  "dense_k3",
+  "dense_k5",
+  "hybrid_k3",
+  "hybrid_k5"
+ ],
+ "extension_conditions": [
+  "recent_k1",
+  "recent_k10",
+  "bm25_k1",
+  "bm25_k10",
+  "dense_k1",
+  "dense_k10",
+  "hybrid_k1",
+  "hybrid_k10"
+ ],
+ "primary_metric": "timely recall on test at the frozen validation threshold",
+ "secondary_metrics": [
+  "test sequence FPR",
+  "any-detection recall",
+  "input tokens per decision",
+  "end-to-end seconds per decision (retrieval + judge)",
+  "share of decisions whose history is shorter than full"
+ ],
+ "primary_k_proposed": 3,
+ "primary_k_rationale": "At k=5 most decisions already see all earlier steps (median sequence ~7 steps), so k=3 is the stronger test of selection. To be confirmed with the margin before any test run.",
+ "primary_comparisons": [
+  {
+   "id": "H1",
+   "question": "Does full history beat current-only?",
+   "a": "current",
+   "b": "full"
+  },
+  {
+   "id": "H2",
+   "question": "Does top-k retrieval keep full-history timely recall within the margin?",
+   "reference": "full",
+   "candidates": [
+    "bm25_k{K}",
+    "dense_k{K}",
+    "hybrid_k{K}"
+   ],
+   "test": "non-inferiority: lower 95% bound of (candidate - full) > -margin"
+  },
+  {
+   "id": "H4",
+   "question": "Do retrievers beat recency at the same k?",
+   "reference": "recent_k{K}",
+   "candidates": [
+    "bm25_k{K}",
+    "dense_k{K}"
+   ]
+  }
+ ],
+ "equivalence_margin_timely_recall": null,
+ "margin_rule": "Set after the validation stage, before any test run, from validation results only; recorded in the frozen thresholds file.",
+ "statistics": "paired sequence bootstrap on identical test IDs, 2000 draws, seed 1729; sequence-level (not task-family); report counts and denominators",
+ "exploratory": [
+  "per task type",
+  "k sensitivity (extension conditions)",
+  "sensitivity exclusions",
+  "paper F1/DSR at the same scores"
+ ],
+ "not_in_phase3": "oracle evidence and ablations (Phase 4); response-aware evidence (E2)"
+}

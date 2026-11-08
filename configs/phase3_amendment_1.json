@@ -1,0 +1,21 @@
+{
+ "status": "AMENDMENT_BEFORE_ANY_TEST_RUN",
+ "amendment": 1,
+ "protocol_version": "phase3-a1",
+ "written_at_utc": "2026-11-03T04:27:07+00:00",
+ "amends_plan_sha256": "4f099d937d6ae745536590b8fbb5f8875a7eb23788da8a2fa35b63c5c51af1d4",
+ "decided_by": "user, 2026-11-02, after the validation stage only (no test data used)",
+ "reason": "The Agent-ICL judge's parsed scores are nearly binary (0 / 0.5 / 1, plus rare misparses such as 3.0). With 127 validation benign sequences, a 5% budget allows 6 flags; conditions with 7+ flags at the 'score >= 1' cutoff fell to the next candidate threshold (a misparsed 3.0, or none), collapsing timely recall from ~0.84 to 0 (bm25_k3, recent_k3). The fixed-FPR comparison measured a calibration cliff, not evidence selection.",
+ "evidence": "Validation runs 798493_0..9 (superseded): e.g. at score >= 1, bm25_k3 flags 7/127 benign (timely 115/137); full flags 5/127 (112/137).",
+ "changes": [
+  "Readout A (primary): continuous score P('1')/(P('0')+P('1')) at the first generated token (plain and space-prefixed digit tokens), from the same greedy generation; threshold per condition at validation sequence FPR <= 0.05.",
+  "Readout B (secondary): parsed upstream score at the fixed cutoff >= 1.0, no calibration; report timely recall and FPR side by side.",
+  "Calibration candidates restricted to scores in [0, 1]; misparsed values (> 1) can never be thresholds.",
+  "Diagnostics: P('0')+P('1') mass at the first token, and agreement between A (>= 0.5) and parsed 0/1.",
+  "Output files tagged protocol_version 'phase3-a1' (results/phase3a1_*); superseded validation runs cannot be frozen."
+ ],
+ "unchanged": [
+  "judge model, prompt, decoding, data, conditions, primary metric (timely recall at the frozen validation threshold), comparisons H1/H2/H4, margin rule"
+ ],
+ "superseded_runs": "results/phase3_validation_*_798493_*.json (kept for the record, never used for freezing or claims)"
+}

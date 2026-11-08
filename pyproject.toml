@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stateful-safety-experiment"
+version = "0.1.0"
+description = "Research starter: evidence selection in stateful AI safety monitoring"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+science = ["numpy>=1.26", "pandas>=2.0", "scikit-learn>=1.4", "matplotlib>=3.8", "pyyaml>=6"]
+retrieval = ["sentence-transformers>=3.0", "faiss-cpu>=1.8"]
+model = ["torch>=2.3", "transformers>=4.45", "accelerate>=1.0", "sentencepiece"]
+dev = ["pytest>=8", "ruff>=0.6"]
+data = ["huggingface_hub>=0.25"]
+
+[project.scripts]
+safety-study = "stateful_safety.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100

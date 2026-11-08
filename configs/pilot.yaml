@@ -1,0 +1,20 @@
+dataset:
+  # Local path only; DecomposedHarm requires user acceptance on Hugging Face.
+  path: fixtures/synthetic_fixture.jsonl
+  harmful_index_base: 0  # For fixture only. Verify benchmark separately.
+judge:
+  backend: mock  # NOT a real safety monitor.
+  model_id: meta-llama/Llama-3.1-8B-Instruct
+  max_input_tokens: 4096
+  dtype: bfloat16       # fixed study-wide; Llama 3.1 native; decision 2026-11-02 (revised)
+hardware:
+  gpu: NVIDIA H100 NVL (clipper short-gpu / gpu)
+monitor:
+  history_mode: full
+  k: 3
+retrieval:
+  dense_model: sentence-transformers/all-MiniLM-L6-v2
+calibration:
+  sequence_fpr_budget: 0.05
+reproducibility:
+  seed: 1729

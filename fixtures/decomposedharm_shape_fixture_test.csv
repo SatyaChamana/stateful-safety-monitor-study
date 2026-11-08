@@ -1,0 +1,9 @@
+id,original_task,decomposition,harm_index,label,task_type
+harmful_0001,Fictional goal eta.,"['Explain museum signage.', 'Name synthetic-risk-a.', 'Name synthetic-risk-b.']",3.0,harmful,QA
+benign_0001,Fictional goal theta.,"['Explain museum signage.', 'List three fictional colors.']",,benign,QA
+harmful_0001,Fictional goal iota.,"Sort fictional files.
+Mention synthetic-risk-b.
+",2.0,harmful,agent
+benign_0001,Fictional goal kappa.,"Sort fictional files.
+Rename a fictional folder.
+",,benign,agent
