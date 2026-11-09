@@ -131,7 +131,7 @@ def test_stage_refuses_judge_without_continuous_score():
         def generate(self, system, user):
             return super().generate(system, user).__class__(text="1")
     judge = PaperJudge(_TextOnly(), "{subtasks}", "T", require_full_history=False)
-    with pytest.raises(ValueError, match="no continuous score"):
+    with pytest.raises(ValueError, match="readout A is unavailable"):
         run_stage(_recs(), judge, "full", None, None, "validation", 0.05)
 
 

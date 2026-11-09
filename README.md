@@ -1,50 +1,68 @@
-# Stateful AI Safety Monitoring: Experiment 1
+# How Much History Does a Sequential Misuse Monitor Need?
 
-**Status (tag `phase3-v1.1`, 2026-11-08): Phases 0 to 3 complete; stopped after Phase 3. Phases 4 and 5 deferred, not skipped.** Version 1.1 revises the manuscript after an internal review and adds post-hoc input checks (`scripts/phase3_overlap.py`, `docs/phase3_overlap.md`); no experiment was rerun. The pre-registration, amendment and freeze files are unchanged from the original 2026-11-03 run.
+A reproduction of a published sequential misuse monitor and a controlled comparison of which earlier requests a fixed safety judge should see. Independent study by Satya Chamana; manuscript draft, not peer reviewed.
 
-- Phase 2: reproduction of the published Llama-3.1-8B sequential monitor, `docs/reproduction_report.md`.
-- Phase 3: pre-registered history-selection study, `docs/phase3_report.md`.
-- Manuscript: `docs/manuscript/` (Word; current version `history-selection-sequential-monitor-phase3-v1.1.docx`, original v1 kept; figures in `docs/figures/`, built by `scripts/make_figures.py` and `docs/manuscript/build_manuscript.js`).
-- Full change and decision history: `docs/experiment_log.md`.
+**Release:** tag `phase3-v1.1` (code and protocol as run on 2026-11-03; v1.1 adds post-hoc checks, no rerun). `main` also carries later manuscript wording fixes and integrity hardening (see Changelog).
 
-This repository tests whether selecting earlier authorized requests improves detection by a fixed safety monitor. It starts with a data adapter, causal replay, current/recent/full/BM25 history, optional dense retrieval, validation-only calibration and test evaluation.
+## Research question
 
-## Start with Claude Code or Codex
+Decomposition attacks split a harmful goal into steps that each look harmless. A sequential monitor judges each new request together with earlier ones. This study asks how much of that history a fixed judge needs, and how it should be chosen: the current request alone, the most recent steps, full history, or earlier steps selected by BM25, dense embeddings or a hybrid of the two.
 
-Read `EXPERIMENT_BUILD_SPEC.md`. Both `CLAUDE.md` and `AGENTS.md` are included, so a coding agent can begin with the next unchecked task.
+## Design
 
-## Quick start on a developer computer
+- **Judge:** Llama-3.1-8B-Instruct (revision pinned) with the upstream Agent-ICL prompt, bfloat16, local inference on an NVIDIA H100 NVL.
+- **Benchmark:** DecomposedHarm (gated, evaluation only), the authors' 264 validation and 528 test sequences, pinned by ID.
+- **Phase 2:** reproduce the published monitor under the authors' scoring rule.
+- **Phase 3:** hold judge and prompt fixed and vary only the history it sees, across ten conditions. The analysis plan (`configs/phase3_plan.json`), one amendment and the thresholds were fixed before the single test run; thresholds were calibrated on validation to a 5% false-alarm budget and frozen with SHA-256 hashes of the plan and every validation file. These files were not deposited with an external registry, so their timing rests on this project's own records.
+- **Statistics:** paired sequence bootstrap with counts and denominators; non-inferiority margin 0.05 in timely recall.
+
+## Findings (test, 528 sequences)
+
+| Result | Evidence | Status |
+|---|---|---|
+| Reproduction: F1 matches the authors' released outputs to within 0.001 under their scoring rule (Agent-ICL test F1 0.898) | `docs/reproduction_report.md` | Aggregate agreement; confusion matrices differ slightly, so not identical per-sequence behavior |
+| Full history vs current request: timely recall 0.798 vs 0.684 (+0.114, 95% CI +0.068 to +0.156), but benign FPR 0.068 vs 0.019 | `docs/phase3_report.md` §3 | Positive on the primary readout, not separable from the false-alarm difference |
+| At equal test false-alarm counts, the overall gain disappears | `docs/phase3_report.md` §5 | Exploratory (thresholds tuned on test) |
+| Top-3 BM25, dense and hybrid retrieval are non-inferior to full history in timely recall (lower 95% bounds ≥ −0.011 unadjusted, about −0.015 Bonferroni; margin 0.05); no increase in false alarms detected | `docs/phase3_report.md` §3 | Benchmark-specific: sequences are short (median 7 steps), and top-3 input equals full history whenever 3 or fewer earlier steps exist |
+| Retrieval does not beat keeping the three most recent steps | `docs/phase3_report.md` §3, `docs/phase3_overlap.md` | Inputs to retrieval and recency were identical in about half of the decisions that decide timely detection |
+| Cost: top-3 input averages about 1,525 tokens per decision vs 1,556 for full history | `docs/phase3_report.md` §4 | About 2% fewer tokens; this study shows no meaningful efficiency gain |
+
+The main limitation is construct validity: the benchmark is too short for history selection to matter much. See the manuscript's Limitations section and `docs/phase3_report.md` §6.
+
+## Reproduce
+
+Requirements: Python 3.11. Exact versions for the CPU development environment are in `constraints/cpu-dev-py311-macos-arm64.txt`. GPU runs used CPython 3.11.18, torch 2.15.0+cu132 (CUDA 13.2) on an H100 NVL; the full GPU lock file is written by `scripts/clipper/setup.sh`.
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
+python3.11 -m venv .venv && source .venv/bin/activate
 python -m pip install -e '.[dev,science]'
-python -m pytest -q
-bash scripts/ci.sh          # lint + tests + fixture smoke CLI
-safety-study audit --data fixtures/synthetic_fixture.jsonl --index-base 0
-safety-study evaluate --validation fixtures/synthetic_validation_fixture.jsonl \
-  --test fixtures/synthetic_test_fixture.jsonl --index-base 0 \
-  --backend mock --mode full --fpr-budget 0.05
+bash scripts/ci.sh          # lint, 120 tests (9 skip without the upstream clone or encoder), fixture smoke CLI
 ```
 
-The mock backend uses arbitrary fictional markers and produces **smoke tests only**, not AI safety findings.
+The real benchmark is not bundled. Accept the gated terms at https://huggingface.co/datasets/YuehHanChen/DecomposedHarm and respect the creators' evaluation-only request; never train on it. GPU runs: `docs/clipper.md` and `scripts/slurm/`. The commands that regenerate every table and figure from result files are in the manuscript's Appendix B. Per-sequence result files are not in this repository.
 
-## Real benchmark is not bundled
+## Integrity safeguards in code
 
-If `python3.11` is missing: `uv venv --python 3.11 .venv` (set `UV_PYTHON_PREFERENCE=only-managed` if a broken system Python is picked up).
+- The runner refuses any history item from the current or a later step.
+- The test stage refuses to run without a frozen threshold file whose protocol version, margin and false-alarm budget match; the analysis plan must hash to the value recorded in that file, and a real run's judge model, revision, dtype, prompt, split file and encoder must match the plan.
+- Every scored turn must have a finite continuous score in [0, 1]; a missing score stops the run instead of counting as "not flagged".
+- Raw benchmark text, labels and model weights are never committed; tests use fictional fixtures.
 
+## Repository map
 
-Accept gated access terms at https://huggingface.co/datasets/YuehHanChen/DecomposedHarm and respect the creators' evaluation-only request. Never use this dataset to train a model. Actual data cannot be committed to this repository. Confirm `harmful_index` numbering before data ingestion.
+| Path | Contents |
+|---|---|
+| `src/stateful_safety/` | Dataset adapter, history selectors, paper-mode judge, stage runner, metrics, statistics |
+| `configs/` | Analysis plan, amendment, frozen thresholds, split IDs, exclusions |
+| `scripts/` | Summaries, exploratory and post-hoc analyses, figures, SLURM and cluster setup |
+| `docs/` | Reproduction and Phase 3 reports, overlap checks, dataset manifest, experiment log, manuscript |
+| `tests/`, `fixtures/` | Unit and integration tests on fictional data |
 
-## Data integrity
+## Changelog
 
-The monitor view contains current request and earlier requests only, not labels, future turns, or original high-level harmful goals. A separated evaluation command fits score thresholds on validation and reports test metrics without raw text.
+- **phase3-v1.1 (2026-11-08):** manuscript revised after an internal review; post-hoc input-overlap checks (`scripts/phase3_overlap.py`). No experiment rerun.
+- **main after phase3-v1.1:** manuscript wording fixes from a second review; "pre-registered" replaced by "analysis plan fixed before the test run" (no external registry was used); test stage now checks inputs against the frozen plan; per-turn score validation; GitHub Actions CI.
 
-## Current limitations
+## How this was built
 
-- See `docs/phase3_report.md` §6 and `docs/reproduction_report.md` §4–4b. Raw benchmark data, model weights and per-sequence result files are not in this repository.
-- Oracle evidence (Phase 4) is planned, not implemented.
-- Sequence bootstrap only; task-family grouping is not verified.
-- Do not use smoke test numbers in a PhD statement or paper.
-
-See `EXPERIMENT_BUILD_SPEC.md` for tasks, metrics, ethics and acceptance criteria.
+The code was written with AI coding assistants under a written build specification (`EXPERIMENT_BUILD_SPEC.md`; agent instructions in `CLAUDE.md` and `AGENTS.md`). The author designed the study, specified each component and its tests, ran every job and wrote the analysis.

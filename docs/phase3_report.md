@@ -1,10 +1,10 @@
 # Phase 3 report: which earlier steps should a sequential monitor see?
 
-Status: **test stage run once (job 798699) with thresholds frozen beforehand.** §3 is the pre-registered analysis; §5 is exploratory and was decided after unblinding. Aggregates only; no request text.
+Status: **test stage run once (job 798699) with thresholds frozen beforehand.** §3 is the planned analysis (plan fixed before the test run; no external registry); §5 is exploratory and was decided after unblinding. Aggregates only; no request text.
 
 ## 0. Summary
 
-| Hypothesis (pre-registered) | Result on test | Verdict |
+| Hypothesis (from the analysis plan) | Result on test | Verdict |
 | --- | --- | --- |
 | H1: full history beats current-only | timely recall +0.114 [+0.068, +0.156], but benign FPR also higher by 0.049 [+0.019, +0.079] | **Supported on the primary readout, with a false-alarm cost**; not a same-FPR win (§5.1) |
 | H2: top-3 retrieval stays within 0.05 of full history | bm25 +0.004, dense +0.011, hybrid +0.015; all lower bounds ≥ −0.011 | **Supported for all three retrievers** |
@@ -28,7 +28,7 @@ One fixed judge; the **only** thing that changes between conditions is which ear
 ### Timeline (all UTC, 2026-11-03)
 | Time | Event |
 | --- | --- |
-| 03:43 | Plan pre-registered (`configs/phase3_plan.json`): conditions, metric, H1/H2/H4, k = 3 proposed, margin to be set from validation. |
+| 03:43 | Analysis plan written and hashed (`configs/phase3_plan.json`): conditions, metric, H1/H2/H4, k = 3 proposed, margin to be set from validation. |
 | — | Validation run 798493 exposed a calibration cliff: parsed scores are near-binary, so a 5% budget on 127 benign sequences forced some thresholds onto a misparsed 3.0 or none. **Superseded, never frozen.** |
 | 04:27 | Amendment 1 (`configs/phase3_amendment_1.json`): readouts A + B, thresholds restricted to [0, 1]. No test data seen. |
 | — | Validation run 798524 under the amendment. |
@@ -45,7 +45,7 @@ One fixed judge; the **only** thing that changes between conditions is which ear
 
 The continuous score is a faithful version of the judge's own answer, with enough spread among benign sequences for FPR calibration (for example `full`, benign max score: 109 below 0.1, 18 between 0.1 and 0.99).
 
-## 3. Pre-registered results (test, readout A, frozen thresholds)
+## 3. Planned results (test, readout A, frozen thresholds)
 
 | Condition | Threshold | Benign flagged (FPR) | Timely recall | Any detection |
 | --- | --- | --- | --- | --- |
@@ -137,11 +137,11 @@ At equal false alarms, full history does **not** beat current-only overall. Rece
 
 - **Decomposed QA (no benign QA flags in any condition):** this is where history helps cleanly. Full history doubles the share of QA attacks caught in time (0.291 → 0.488). Hybrid retrieval matches full and beats recency by 9 points, because the relevant QA pieces are not always the most recent ones.
 - **Image and agent:** history adds benign false alarms (image benign FPR: current 0.023, full 0.115). Image attacks are caught near-perfectly even without history.
-- These are post-hoc, per-type, multiple comparisons. The QA retrieval-vs-recency result is a hypothesis for a pre-registered follow-up, not a finding.
+- These are post-hoc, per-type, multiple comparisons. The QA retrieval-vs-recency result is a hypothesis for a follow-up, not a finding.
 
 ## 6. Limitations
 - **Test reuse:** the 528 test sequences were also evaluated in Phase 2 (a different study question; no Phase 3 choice used them). Disclosed in advance; a fresh hold-out would have been 172 unbalanced rows.
-- **Threshold transfer:** test FPRs differ between conditions (0.019–0.068), which confounds H1 and H4 on readout A. A larger benign calibration set, or a comparison at fixed test FPR pre-registered in advance, would remove this.
+- **Threshold transfer:** test FPRs differ between conditions (0.019–0.068), which confounds H1 and H4 on readout A. A larger benign calibration set, or a comparison at a fixed test FPR specified in advance, would remove this.
 - **Short sequences:** most decisions have few earlier steps (at k = 5, about 71% see all of them), so this benchmark cannot show retrieval's cost advantage or its behaviour on long histories.
 - **Single judge, single seed:** one 8B model with greedy decoding. Other judges may use history differently.
 - **Statistics:** sequence-level bootstrap. Task-family clustering is not modelled, so intervals may be too narrow if families are correlated.

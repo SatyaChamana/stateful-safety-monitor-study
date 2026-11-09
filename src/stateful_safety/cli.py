@@ -69,6 +69,7 @@ def _args():
     hist.add_argument("--k",type=int,default=None)
     hist.add_argument("--fpr-budget",type=float,default=0.05)
     hist.add_argument("--thresholds",default=None,help="Frozen validation thresholds (test stage only)")
+    hist.add_argument("--plan",default="configs/phase3_plan.json",help="Analysis plan; its SHA-256 must match the frozen file (test stage)")
     hist.add_argument("--dense-model",default=None)
     hist.add_argument("--dense-revision",default=None)
     hist.add_argument("--index-base",type=int,choices=(0,1),default=None)
@@ -236,6 +237,42 @@ def _score_bucket(value):
     return "between_0_and_1" if 0 < value < 1 else "above_1"
 
 
+def _check_test_inputs(args, table):
+    """Test stage: the run's inputs must match the plan the thresholds were frozen under.
+
+    If the frozen file records a plan hash, the plan file must hash to it. Real (hf) runs must
+    have that hash and must match the plan's judge model, revision, dtype and prompt, its split
+    ID file and, for dense or hybrid, its encoder and revision.
+    """
+    import hashlib
+    want=table.get("plan_sha256")
+    if want is None:
+        if args.backend=="hf":
+            raise SystemExit("Frozen file records no plan_sha256; refusing a real test run")
+        return
+    plan_path=Path(args.plan)
+    if not plan_path.exists():
+        raise SystemExit(f"Plan file not found: {plan_path}")
+    if hashlib.sha256(plan_path.read_bytes()).hexdigest()!=want:
+        raise SystemExit("Plan file does not match the plan_sha256 in the frozen file")
+    if args.backend!="hf":
+        return
+    plan=json.loads(plan_path.read_text())
+    judge=plan.get("judge",{})
+    checks=[("--model-id",args.model_id,judge.get("model_id")),
+            ("--model-revision",args.model_revision,judge.get("model_revision")),
+            ("--dtype",args.dtype,judge.get("dtype")),
+            ("--paper-prompt",args.paper_prompt,judge.get("paper_prompt")),
+            ("--ids",Path(args.ids).name if args.ids else None,Path(plan.get("data",{}).get("ids","")).name or None)]
+    if args.mode in ("dense","hybrid"):
+        enc=plan.get("dense_encoder",{})
+        checks+=[("--dense-model",args.dense_model,enc.get("model")),
+                 ("--dense-revision",args.dense_revision,enc.get("revision"))]
+    bad=[f"{flag}={got!r} (plan: {exp!r})" for flag,got,exp in checks if got!=exp]
+    if bad:
+        raise SystemExit("Test inputs differ from the frozen plan: "+"; ".join(bad))
+
+
 def _history_eval(args):
     """Phase 3 stage runner. Test stage only reads a frozen threshold; it never fits one."""
     from .history import condition_name, run_stage
@@ -267,6 +304,7 @@ def _history_eval(args):
             raise SystemExit("FPR budget differs from the frozen file")
         frozen=table["conditions"][name]["threshold"]
         frozen=float("inf") if frozen is None else frozen
+        _check_test_inputs(args,table)
     elif args.thresholds:
         raise SystemExit("Validation stage fits thresholds; do not pass --thresholds")
     dense=None

@@ -15,7 +15,6 @@ Usage:
 """
 from __future__ import annotations
 import argparse, glob, json, statistics, sys
-from collections import defaultdict
 from pathlib import Path
 
 from stateful_safety.dataset import load_records

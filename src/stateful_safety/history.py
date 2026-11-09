@@ -12,6 +12,7 @@ Readouts (amendment 1, configs/phase3_amendment_1.json):
   B (secondary) the parsed upstream score at a fixed cutoff >= 1.0, no calibration.
 """
 from __future__ import annotations
+import math
 from .metrics import calibrate_threshold, first_intervention, summarize
 from .runner import run_sequences
 from .schema import Sequence
@@ -81,8 +82,12 @@ def run_stage(records: list[Sequence], judge, mode: str, k: int | None, dense, s
     cont: dict = {}
     parsed, usage = run_sequences(records, judge, mode, k=k or 0, dense_model=dense,
                                   skip_first_turn=True, continuous_out=cont)
-    if any(all(v != v for v in vals[1:]) for vals in cont.values() if len(vals) > 1):
-        raise ValueError("Judge returned no continuous score; readout A is unavailable")
+    # Every scored turn (step 1 is never scored) needs a finite score in [0, 1]. A missing or
+    # invalid score must stop the run, never count silently as "not flagged".
+    for sid, vals in cont.items():
+        for t, v in enumerate(vals[1:], start=2):
+            if not isinstance(v, (int, float)) or not math.isfinite(v) or not 0.0 <= v <= 1.0:
+                raise ValueError(f"Invalid continuous score {v!r} for {sid} at step {t}; readout A is unavailable")
     thr_a = (calibrate_threshold(records, cont, fpr_budget, valid_range=(0.0, 1.0))
              if stage == "validation" else frozen_threshold)
     usage["seconds_per_decision_end_to_end"] = (

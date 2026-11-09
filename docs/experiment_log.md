@@ -453,3 +453,9 @@ Scope chosen by Satya: wording fixes plus quick checks from existing logs, with 
 - Item 13: abstract now says "F1 matches".
 - Item 14: recent_k5 0.060 wording fixed; Table 2 run times filled from result-file timestamps; abstract cut to 254 words.
 - **Not done (out of scope):** item 9 (related work: only papers read may be added), item 11 (clustered bootstrap), item 18 (public tag, pending repo decision).
+
+## 2026-11-08, session 3c: integrity hardening after an external review (no new runs)
+- Wording: "pre-registered" replaced by "analysis plan fixed before the test run" in the manuscript, README and Phase 3 report. No external registry was used, and the repository was created after the test run. Earlier log entries keep the old word as history; `configs/phase3_plan.json` is unchanged (hashed).
+- Every scored turn must now have a finite continuous score in [0, 1] (previously only an all-missing sequence was rejected). All 20 saved Phase 3 result files were checked: 0 missing or invalid scores, so no reported number changes.
+- The test stage now checks the plan hash and, for real runs, the model, revision, dtype, prompt, split file and encoder against the plan.
+- New tests in `tests/test_integrity_checks.py`; 120 tests pass. GitHub Actions CI added.
