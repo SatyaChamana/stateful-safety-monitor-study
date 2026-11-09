@@ -31,7 +31,7 @@ The main limitation is construct validity: the benchmark is too short for histor
 
 ## Reproduce
 
-Requirements: Python 3.11. Exact versions for the CPU development environment are in `constraints/cpu-dev-py311-macos-arm64.txt`. GPU runs used CPython 3.11.18, torch 2.15.0+cu132 (CUDA 13.2) on an H100 NVL; the full GPU lock file is written by `scripts/clipper/setup.sh`.
+Requirements: Python 3.11. Exact versions for the CPU development environment are in `constraints/cpu-dev-py311-macos-arm64.txt`. GPU runs used CPython 3.11.18 on an H100 NVL with the exact packages in `constraints/clipper-py311-linux-x86_64.txt` (torch 2.15.0 with CUDA 13.2, transformers 5.22.1, sentence-transformers 6.2.0, accelerate 1.15.0), written by `scripts/clipper/setup.sh` on the cluster.
 
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
